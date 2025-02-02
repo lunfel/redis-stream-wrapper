@@ -1,0 +1,23 @@
+{
+    "name": "lunfel/redis-stream-wrapper",
+    "description": "lunfel/redis-stream-wrapper",
+    "type": "library",
+    "autoload": {
+        "psr-4": {
+            "Lunfel\\RedisStreamWrapper\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Mathieu Tanguay"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-redis": "*"
+    },
+    "require-dev": {
+        "ext-mbstring": "*",
+        "phpunit/phpunit": "^11.5"
+    }
+}

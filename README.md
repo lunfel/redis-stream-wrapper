@@ -26,7 +26,7 @@ composer lunfel/redis-stream-wrapper
 Before using the stream wrapper, you need to register it:
 
 ```php
-stream_wrapper_register("redis", \Lunfel\RedisStreamWrapper::class);
+stream_wrapper_register("redis", \Lunfel\RedisStreamWrapper\RedisStreamWrapper::class);
 ```
 
 ### Writing to a Redis Stream
@@ -42,7 +42,7 @@ fclose($stream);
 ```php
 $stream = fopen("redis://test", "r");
 while (($data = fgets($stream)) !== false) {
-    echo "Received: " . $data . PHP_EOL;
+    echo "Received: " . $data;
 }
 fclose($stream);
 ```

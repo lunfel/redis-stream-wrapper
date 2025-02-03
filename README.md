@@ -16,7 +16,7 @@ This package provides a PHP stream wrapper for Redis, allowing seamless integrat
 You can install the package using Composer:
 
 ```sh
-composer require your-vendor/redis-stream-wrapper
+composer lunfel/redis-stream-wrapper
 ```
 
 ## Usage
@@ -26,14 +26,14 @@ composer require your-vendor/redis-stream-wrapper
 Before using the stream wrapper, you need to register it:
 
 ```php
-stream_wrapper_register("redis", \YourNamespace\RedisStreamWrapper::class);
+stream_wrapper_register("redis", \Lunfel\RedisStreamWrapper::class);
 ```
 
 ### Writing to a Redis Stream
 
 ```php
 $stream = fopen("redis://test", "w");
-fwrite($stream, json_encode(['message' => 'Hello, Redis!']));
+fwrite($stream, 'Hello, Redis!'));
 fclose($stream);
 ```
 
@@ -46,3 +46,7 @@ while (($data = fgets($stream)) !== false) {
 }
 fclose($stream);
 ```
+
+### Todo
+
+Complete readme...

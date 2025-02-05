@@ -20,19 +20,16 @@ jobs:
     services:
       redis:
         image: redis:${{ matrix.redis-version}}
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
         ports:
           - 6379:6379
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
-
-      - name: Wait for Redis to be ready
-        run: |
-          until nc -z redis 6379; do
-            echo "Waiting for Redis..."
-            sleep 1
-          done
-          echo "Redis is ready!"
 
       - name: Install dependencies
         run: |

@@ -38,7 +38,7 @@ jobs:
           apt-get update && apt-get install -y unzip curl
           curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
           composer config platform.php ${{ matrix.php-version }}
-          composer config platofrm.redis 6.1.0 # ext-redis version is different than php. ext-redis 6.1.0 supports php 7.4+ 
+          composer config platofrm.ext-redis 6.1.0 # ext-redis version is different than php. ext-redis 6.1.0 supports php 7.4+ 
           composer install --no-interaction --prefer-dist
 
       - name: Run tests

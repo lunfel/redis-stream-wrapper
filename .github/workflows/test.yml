@@ -1,0 +1,49 @@
+name: Run integration tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+
+  integration_test:
+    runs-on: ubuntu-latest
+
+    name: Integration tests (PHP ${{ matrix.php-version }} and Redis ${{ matrix.redis-version }})
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3', '8.4']
+        redis-version: ['7.4', '6.2', '5.0']
+    container:
+      image: ghcr.io/${{ github.repository }}/php:${{ matrix.php-version }}
+
+    services:
+      redis:
+        image: redis:${{ matrix.redis-version}}
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y unzip curl
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+          composer config platform.php ${{ matrix.php-version }}
+          composer config platform.ext-redis 6.1.0 # ext-redis version is different than php. ext-redis 6.1.0 supports php 7.4+ 
+          composer install --no-interaction --prefer-dist
+
+      - name: Run tests
+        run: |
+          echo "Running tests with PHP ${{ matrix.php-version }}"
+          php --version
+          # Run your test command, e.g., PHPUnit
+          vendor/bin/phpunit tests

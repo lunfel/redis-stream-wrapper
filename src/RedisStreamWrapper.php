@@ -68,7 +68,7 @@ class RedisStreamWrapper
     {
         $options = stream_context_get_options($this->context);
 
-        if (is_callable($callback = $options['redis']['events']['before_stream_close'])) {
+        if (is_callable($callback = $options['redis']['events']['before_stream_close'] ?? null)) {
             $callback($this->redis, $this->getRedisKey());
         }
 

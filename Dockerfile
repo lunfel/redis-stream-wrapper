@@ -1,6 +1,12 @@
-FROM php:8.2-cli
+ARG PHP_VERSION="8.1"
 
-RUN pecl install redis xdebug && docker-php-ext-enable redis xdebug
+FROM php:$PHP_VERSION-cli AS base
+
+RUN pecl install redis && docker-php-ext-enable redis
+
+FROM base AS dev
+
+RUN pecl install xdebug && docker-php-ext-enable xdebug
 
 # Configure Xdebug for coverage mode
 RUN echo "zend_extension=xdebug" > /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \

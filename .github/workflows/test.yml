@@ -1,0 +1,47 @@
+name: Run integration tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+
+  integration_test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        php-version: ['8.1', '8.2', '8.3', '8.4']
+        redis-version: ['7.4', '6.2', '5.0']
+    container:
+      image: php:${{ matrix.php-version }}
+
+    services:
+      redis:
+        image: redis:${{ matrix.redis-version}}
+        ports:
+          - 6379:6379
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Wait for Redis to be ready
+        run: |
+          until nc -z redis 6379; do
+            echo "Waiting for Redis..."
+            sleep 1
+          done
+          echo "Redis is ready!"
+
+      - name: Install dependencies
+        run: |
+          apt-get update && apt-get install -y unzip curl
+          curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+          composer install --no-interaction --prefer-dist
+      - name: Run tests
+        run: |
+          echo "Running tests with PHP ${{ matrix.php-version }}"
+          php --version
+          # Run your test command, e.g., PHPUnit
+          vendor/bin/phpunit

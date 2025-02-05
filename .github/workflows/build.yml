@@ -6,8 +6,6 @@ on:
 jobs:
   build_images:
     runs-on: ubuntu-latest
-    container:
-      image: docker
 
     strategy:
       matrix:

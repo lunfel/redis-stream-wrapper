@@ -17,7 +17,7 @@ jobs:
         php-version: ['8.1', '8.2', '8.3', '8.4']
         redis-version: ['7.4', '6.2', '5.0']
     container:
-      image: php:${{ matrix.php-version }}
+      image: ghcr.io/${{ github.repository }}/php:${{ matrix.php-version }}
 
     services:
       redis:

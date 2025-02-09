@@ -20,7 +20,7 @@ class RedisStreamWrapper
     /**
      * @var string Last entry id read from the stream
      */
-    private string $last_id = "0";
+    private string $last_id;
 
     public function dir_closedir(): bool
     {
@@ -69,7 +69,7 @@ class RedisStreamWrapper
         $options = stream_context_get_options($this->context);
 
         if (is_callable($callback = $options['redis']['events']['before_stream_close'] ?? null)) {
-            $callback($this->redis, $this->getRedisKey());
+            $callback($this->getRedisKey(), $this->redis);
         }
 
         if ($this->redis) {
@@ -86,6 +86,10 @@ class RedisStreamWrapper
 
     public function stream_flush(): bool
     {
+        if ($this->mode != 'a') {
+            return false;
+        }
+
         $initialPosition = ftell($this->internal_stream);
 
         fseek($this->internal_stream, $this->remote_write_position);
@@ -125,6 +129,10 @@ class RedisStreamWrapper
         ?string &$opened_path
     ): bool
     {
+        if (!in_array($mode, ['a', 'r'])) {
+            throw new \RuntimeException(sprintf('RedisStreamWrapper only supports "a" or "r" mode. "%s" mode provided', $mode));
+        }
+
         $this->path = $path;
         $this->mode = $mode;
         $this->options = $options;
@@ -135,6 +143,8 @@ class RedisStreamWrapper
 
         $internalStreamUri = $options['redis']['configurations']['internal_stream_uri'] ?? "php://temp";
 
+        $this->last_id = $options['redis']['configurations']['start_id'] ?? "0";
+
         $this->internal_stream = fopen($internalStreamUri, "r+");
 
         return true;
@@ -142,11 +152,19 @@ class RedisStreamWrapper
 
     public function stream_read(int $count): string|false
     {
+        if ($this->mode !== 'r') {
+            return false;
+        }
+
         return $this->receiveMessages();
     }
 
     public function stream_seek(int $offset, int $whence = SEEK_SET): bool
     {
+        if ($this->mode !== 'r') {
+            return false;
+        }
+
         return fseek($this->internal_stream, $offset, $whence);
     }
 
@@ -172,11 +190,19 @@ class RedisStreamWrapper
 
     public function stream_write(string $data): int
     {
+        if ($this->mode !== 'a') {
+            return 0;
+        }
+
         return fwrite($this->internal_stream, $data);
     }
 
     public function unlink(string $path): bool
     {
+        if ($this->mode !== 'a') {
+            return false;
+        }
+
         $this->initializeRedisConnection();
 
         return (bool) $this->redis->del($this->getKeyFromPath($path));
@@ -249,6 +275,12 @@ class RedisStreamWrapper
                     $data .= $value;
                 }
             }
+        }
+
+        $options = stream_context_get_options($this->context);
+
+        if (is_callable($callback = $options['redis']['events']['after_read'] ?? null)) {
+            $callback($this->last_id, $this->getRedisKey(), $this->redis);
         }
 
         fwrite($this->internal_stream, $data);

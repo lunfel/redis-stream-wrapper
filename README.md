@@ -60,29 +60,35 @@ $options = [
             return $client;
         },
         'configurations' => [
-            // Prefix to add to stream key
-            // For example, with prefix set to "mystreams:"
-            // The path redis://my/important/file.log would be
-            // translated into redis key "mystreams:my/important/file.log"
-            // default is empty string ''
+            // Prefix added to the Redis stream key.
+            // Example: If the prefix is "mystreams:", the path "redis://my/important/file.log"
+            // becomes the Redis key "mystreams:my/important/file.log".
+            // Default: empty string ('').
             'key_prefix' => 'mystreams:',
-            // The wrapper uses an internal buffer to
-            // manage the data locally. This tells the wrapper
-            // what kind of buffer to operate with.
-            // Defaults to 'php://temp'
-            'internal_stream_uri' => 'php://temp'
+            // Specifies the type of internal buffer used by the wrapper to manage data locally.
+            // Default: 'php://temp'.
+            'internal_stream_uri' => 'php://temp',
+            // If set, the Redis stream starts reading from this ID.  
+            // Useful for resuming from where you left off.  
+            // The `after_read` event provides `lastMessageId`,  
+            // which can be used as `start_id` to continue reading.
+            'start_id' => '0'
         ],
         'events' => [
-            // If provided, will execute this callback before
-            // fclose is called on the stream.
-            // You do not need to close the connection to redis
-            // the wrapper will take care of it.
-            'before_stream_close' => function (Redis $redis, string $redisKeyToStream) {
-                // You can do whatever you want before closing the stream. You
-                // can set an expiration time on the key or delete the stream
+            // If set, this callback executes before `fclose` is called on the stream.  
+            // No need to close the Redis connection manually—the wrapper handles it.
+            'before_stream_close' => function (string $redisKeyToStream, Redis $redis) {
+                // Perform any actions before closing the stream, such as setting an expiration 
+                // or deleting the stream.
                 //
-                // Ex: Expire the key after 60 seconds
+                // Example: Set the key to expire after 60 seconds
                 // $redis->expire($redisKeyToStream, 60);
+            },
+            // If set, this callback executes after reading from the stream.  
+            // Useful for retrieving the last message ID, which is needed  
+            // to continue reading from that point onward.
+            'after_read' => function (string $lastMessageId, string $redisKeyToStream, Redis $redis) {
+                //
             }
         ]
     ],
@@ -92,12 +98,13 @@ $options = [
 #### With Laravel
 
 ```php
+use Illuminate\Support\Facades\Redis as LaravelRedisFacade;
 
 // Default Redis connection
 $options = [
     'redis' => [
         'client' => function (): Redis {
-            return Redis::client();
+            return LaravelRedisFacade::client();
         },
         // ...
     ],
@@ -107,7 +114,7 @@ $options = [
 $options = [
     'redis' => [
         'client' => function (): Redis {
-            return Redis::connection('cache')
+            return LaravelRedisFacade::connection('cache')
                 ->client();
         },
         // ...
